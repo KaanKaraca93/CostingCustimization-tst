@@ -1,6 +1,8 @@
-# PLM Costing Module API
+# PLM Costing Module API - TST Environment
 
 PLM'deki costing modülü için data manipülasyon ve entegrasyon API'si.
+
+**⚠️ TST (Test) Ortamı - Schema: FSH4**
 
 ## Özellikler
 
