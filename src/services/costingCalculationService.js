@@ -351,10 +351,26 @@ function processStyleToSegmentPSF(styleData, decisionTableValues = null) {
     // ===== CALCULATE TYPE=3 (CALCULATED) ELEMENTS =====
     console.log('\n🧮 Calculating Type=3 (Calculated) Elements...');
     
-    // Build override values map with all Type=1 values we've set
+    // Build override values map
     const overrideValues = new Map();
     
-    // Add input values (new key names)
+    // STEP 1: Read existing Type=1 cost element values from PLM supplier[0]
+    // (These include BOM values: KPRC, KKUR, KSARF, AISC, etc.)
+    console.log('   📥 Reading existing Type=1 values from PLM (BOM/BOO sourced)...');
+    const type1Elements = styleCostElements.filter(elem => elem.type === 1);
+    for (const element of type1Elements) {
+      if (unlockedSuppliers.length > 0 && element.supplierValues && element.supplierValues.length > 0) {
+        const firstSupplierVal = element.supplierValues.find(
+          val => val.StyleCostingSupplierId === unlockedSuppliers[0].id
+        );
+        if (firstSupplierVal && firstSupplierVal.Value !== null && firstSupplierVal.Value !== undefined) {
+          overrideValues.set(element.code, firstSupplierVal.Value);
+          console.log(`   📊 ${element.code} = ${firstSupplierVal.Value} (from PLM supplier)`);
+        }
+      }
+    }
+    
+    // STEP 2: Override with input values (input takes priority over PLM values)
     if (decisionValues) {
       // PSF/SPSF removed - no longer used
       overrideValues.set('MU', decisionValues.MU || 0);
@@ -366,10 +382,7 @@ function processStyleToSegmentPSF(styleData, decisionTableValues = null) {
       overrideValues.set('NAVL', decisionValues.NAVL || 0);
     }
     
-    // For suppliers other than Code="2", VRG/NAVL comes from mapping
-    // But for formula calculation, we'll use Code="2"'s values (from input) as representative
-    console.log(`   📊 Using input values for Type=3 calculations (Code="2" values as representative)`);
-    console.log(`   📊 MU=${overrideValues.get('MU')}, KHDF=${overrideValues.get('KHDF')}, FOB=${overrideValues.get('FOB')}`);
+    console.log(`   📊 Input overrides applied → MU=${overrideValues.get('MU')}, KHDF=${overrideValues.get('KHDF')}, FOB=${overrideValues.get('FOB')}`);
     console.log(`   📊 GKUR=${overrideValues.get('GKUR')}, KDV=${overrideValues.get('KDV')}`);
     console.log(`   📊 VRG=${overrideValues.get('VRG')}, NAVL=${overrideValues.get('NAVL')}`);
     
