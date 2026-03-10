@@ -393,7 +393,7 @@ router.post('/get-cost-element-values', async (req, res) => {
     console.log(`📋 Filter: ${filter}`);
 
     // Construct OData query with StyleExtendedFieldValues
-    const costingExpand = 'STYLECOSTING($expand=STYLECOSTELEMENTS($select=Id,StyleCostingId,Code;$expand=STYLECOSTINGSUPPLIERVALS;$filter=Code eq \'GKUR\' or Code eq \'TKMS\' or Code eq \'TAST\' or Code eq \'TISC\' or Code eq \'TTRM\' or Code eq \'TISL\' or Code eq \'TDGR\' or Code eq \'TCOST\' or Code eq \'MCOST\' or Code eq \'RMU\'),STYLECOSTSUPPLIERS($select=Id,StyleCostingId,StyleSupplierId,IsActive,IsLock,IsMainVersion);$select=Id,CostModelId,CurrencyId)';
+    const costingExpand = 'STYLECOSTING($expand=STYLECOSTELEMENTS($select=Id,StyleCostingId,Code;$expand=STYLECOSTINGSUPPLIERVALS;$filter=Code eq \'GKUR\' or Code eq \'TKMS\' or Code eq \'TAST\' or Code eq \'TISC\' or Code eq \'TTRM\' or Code eq \'TISL\' or Code eq \'TDGR\' or Code eq \'TCOST\' or Code eq \'MCOST\' or Code eq \'RMU\' or Code eq \'KPRC\' or Code eq \'KKUR\'),STYLECOSTSUPPLIERS($select=Id,StyleCostingId,StyleSupplierId,IsActive,IsLock,IsMainVersion);$select=Id,CostModelId,CurrencyId)';
     const extendedFieldsExpand = 'STYLEEXTENDEDFIELDVALUES($select=StyleId,Id,ExtFldId,NumberValue;$expand=STYLEEXTENDEDFIELDS($select=Name))';
     const odataQuery = `$select=StyleId,StyleCode&$expand=${costingExpand},${extendedFieldsExpand}&$filter=${filter}`;
 
@@ -461,7 +461,7 @@ router.post('/get-cost-element-values', async (req, res) => {
 
     // Extract values for each cost element
     const result = {};
-    const targetCodes = ['GKUR', 'TKMS', 'TAST', 'TISC', 'TTRM', 'TISL', 'TDGR', 'TCOST', 'MCOST', 'RMU'];
+    const targetCodes = ['GKUR', 'TKMS', 'TAST', 'TISC', 'TTRM', 'TISL', 'TDGR', 'TCOST', 'MCOST', 'RMU', 'KPRC', 'KKUR'];
 
     for (const code of targetCodes) {
       const element = costElements.find(e => e.Code === code);
