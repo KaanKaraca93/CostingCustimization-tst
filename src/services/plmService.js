@@ -445,6 +445,24 @@ class PLMService {
   parseStyleBomData(styleData) {
     const parsed = this.parseStyleCostingData(styleData);
     
+    // Extract dynamic currency rates from extended fields
+    // Cost10 → CurrencyId=3 (EUR/USD) rate, Cost14 → CurrencyId=1 rate
+    const currencyRates = { 4: 1 }; // TRY always 1
+    if (styleData.StyleExtendedFieldValues) {
+      for (const field of styleData.StyleExtendedFieldValues) {
+        const name = field.StyleExtendedFields?.Name;
+        const value = parseFloat(field.NumberValue) || null;
+        if (name === 'Cost10' && value) {
+          currencyRates[3] = value;
+          console.log(`💱 Dynamic rate CurrencyId=3 (Cost10): ${value}`);
+        } else if (name === 'Cost14' && value) {
+          currencyRates[1] = value;
+          console.log(`💱 Dynamic rate CurrencyId=1 (Cost14): ${value}`);
+        }
+      }
+    }
+    parsed.currencyRates = currencyRates;
+
     // Add BOM lines - collect from all StyleBOM entries
     if (styleData.StyleBOM && styleData.StyleBOM.length > 0) {
       parsed.bom = {
