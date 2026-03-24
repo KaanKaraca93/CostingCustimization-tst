@@ -338,7 +338,7 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['KPRC'] = item.purchasePrice;
     result['KSARF'] = item.quantity;
     result['KKUR'] = getRate(item.currencyId);
-    result['KEKM'] = item.numericField8 || 0;  // Ek maliyet (same currency as KPRC)
+    result['KEKM'] = (item.numericField8 || 0) * getRate(item.currencyId);  // Ek maliyet → TRY
     console.log(`✅ Ana Kumaş: KPRC=${item.purchasePrice}, KSARF=${item.quantity}, KKUR=${result['KKUR']}, KEKM=${result['KEKM']}`);
   }
 
@@ -349,10 +349,9 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['APRC'] = weighted.averagePrice;
     result['ASARF'] = weighted.totalQuantity;
     result['AKUR'] = getRate(3);
-    // AEKM: sum of all numericField8 values normalized to Currency 3
+    // AEKM: sum of all numericField8 values converted to TRY
     result['AEKM'] = astarItems.reduce((sum, item) => {
-      const normalizedEkm = (item.numericField8 || 0) * getRate(item.currencyId) / getRate(3);
-      return sum + normalizedEkm;
+      return sum + (item.numericField8 || 0) * getRate(item.currencyId);
     }, 0);
     console.log(`✅ Astar: APRC=${weighted.averagePrice.toFixed(2)}, ASARF=${weighted.totalQuantity.toFixed(2)}, AKUR=${result['AKUR']}, AEKM=${result['AEKM'].toFixed(2)}`);
   }
@@ -363,7 +362,7 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['G1PRC'] = item.purchasePrice;
     result['G1SARF'] = item.quantity;
     result['G1KUR'] = getRate(item.currencyId);
-    result['G1EKM'] = item.numericField8 || 0;  // Ek maliyet (same currency as G1PRC)
+    result['G1EKM'] = (item.numericField8 || 0) * getRate(item.currencyId);  // Ek maliyet → TRY
     console.log(`✅ Garni 1: G1PRC=${item.purchasePrice}, G1SARF=${item.quantity}, G1KUR=${result['G1KUR']}, G1EKM=${result['G1EKM']}`);
   }
 
@@ -373,7 +372,7 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['G2PRC'] = item.purchasePrice;
     result['G2SARF'] = item.quantity;
     result['G2KUR'] = getRate(item.currencyId);
-    result['G2EKM'] = item.numericField8 || 0;  // Ek maliyet (same currency as G2PRC)
+    result['G2EKM'] = (item.numericField8 || 0) * getRate(item.currencyId);  // Ek maliyet → TRY
     console.log(`✅ Garni 2: G2PRC=${item.purchasePrice}, G2SARF=${item.quantity}, G2KUR=${result['G2KUR']}, G2EKM=${result['G2EKM']}`);
   }
 
@@ -384,10 +383,9 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['G3PRC'] = weighted.averagePrice;
     result['G3SARF'] = weighted.totalQuantity;
     result['G3KUR'] = getRate(3);
-    // G3EKM: sum of all numericField8 values normalized to Currency 3
+    // G3EKM: sum of all numericField8 values converted to TRY
     result['G3EKM'] = garni3Items.reduce((sum, item) => {
-      const normalizedEkm = (item.numericField8 || 0) * getRate(item.currencyId) / getRate(3);
-      return sum + normalizedEkm;
+      return sum + (item.numericField8 || 0) * getRate(item.currencyId);
     }, 0);
     console.log(`✅ Garni 3: G3PRC=${weighted.averagePrice.toFixed(2)}, G3SARF=${weighted.totalQuantity.toFixed(2)}, G3KUR=${result['G3KUR']}, G3EKM=${result['G3EKM'].toFixed(2)}`);
   }
@@ -407,10 +405,9 @@ function processBomLines(bomLines, currencyRates = {}) {
     const total = normalized.reduce((sum, item) => sum + (item.purchasePrice * item.quantity), 0);
     result['KEPRC'] = total;
     result['KEKUR'] = getRate(3);
-    // KEEKM: sum of all numericField8 values normalized to Currency 3
+    // KEEKM: sum of all numericField8 values converted to TRY
     result['KEEKM'] = kemerItems.reduce((sum, item) => {
-      const normalizedEkm = (item.numericField8 || 0) * getRate(item.currencyId) / getRate(3);
-      return sum + normalizedEkm;
+      return sum + (item.numericField8 || 0) * getRate(item.currencyId);
     }, 0);
     console.log(`✅ Kemer: KEPRC=${total.toFixed(2)}, KEKUR=${result['KEKUR']}, KEEKM=${result['KEEKM'].toFixed(2)}`);
   }
