@@ -382,7 +382,7 @@ class PLMService {
    */
   buildStyleBomQuery(styleId) {
     // Using exact format that works in Postman, with Type and Formula added for calculations
-    const bomExpand = 'StyleBOM($expand=BOMLine($select=Id,Quantity,Code,Name,Placement2,PurchasePrice,CurrencyId))';
+    const bomExpand = 'StyleBOM($expand=BOMLine($select=Id,Quantity,Code,Name,Placement2,PurchasePrice,CurrencyId,NumericField8))';
     
     const costingExpand = 'STYLECOSTING($expand=STYLECOSTELEMENTS($expand=STYLECOSTINGSUPPLIERVALS;$select=Id,StyleCostingId,Code,Name,Value,Type,Formula),STYLECOSTSUPPLIERS($expand=STYLESUPPLIER($select=Id,SupplierId,Code,SupplierName)); $select=Id, CostModelId, CurrencyId)';
 
@@ -479,7 +479,8 @@ class PLMService {
             name: line.Name,
             placement2: line.Placement2,  // Multi-select field, comma-separated
             purchasePrice: line.PurchasePrice || 0,
-            currencyId: line.CurrencyId
+            currencyId: line.CurrencyId,
+            numericField8: line.NumericField8 || 0  // Ek maliyet (same currency as line)
           }));
           parsed.bom.bomLines.push(...lines);
         }

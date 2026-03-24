@@ -338,17 +338,23 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['KPRC'] = item.purchasePrice;
     result['KSARF'] = item.quantity;
     result['KKUR'] = getRate(item.currencyId);
-    console.log(`✅ Ana Kumaş: KPRC=${item.purchasePrice}, KSARF=${item.quantity}, KKUR=${result['KKUR']}`);
+    result['KEKM'] = item.numericField8 || 0;  // Ek maliyet (same currency as KPRC)
+    console.log(`✅ Ana Kumaş: KPRC=${item.purchasePrice}, KSARF=${item.quantity}, KKUR=${result['KKUR']}, KEKM=${result['KEKM']}`);
   }
 
-  // Process Astar (weighted average)
+  // Process Astar (weighted average, normalized to Currency 3)
   if (astarItems.length > 0) {
     const normalized = normalizeItemsToCurrency(astarItems, 3, getRate);
     const weighted = calculateWeightedAverage(normalized);
     result['APRC'] = weighted.averagePrice;
     result['ASARF'] = weighted.totalQuantity;
     result['AKUR'] = getRate(3);
-    console.log(`✅ Astar: APRC=${weighted.averagePrice.toFixed(2)}, ASARF=${weighted.totalQuantity.toFixed(2)}, AKUR=${result['AKUR']}`);
+    // AEKM: sum of all numericField8 values normalized to Currency 3
+    result['AEKM'] = astarItems.reduce((sum, item) => {
+      const normalizedEkm = (item.numericField8 || 0) * getRate(item.currencyId) / getRate(3);
+      return sum + normalizedEkm;
+    }, 0);
+    console.log(`✅ Astar: APRC=${weighted.averagePrice.toFixed(2)}, ASARF=${weighted.totalQuantity.toFixed(2)}, AKUR=${result['AKUR']}, AEKM=${result['AEKM'].toFixed(2)}`);
   }
 
   // Process Garni 1 (single item)
@@ -357,7 +363,8 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['G1PRC'] = item.purchasePrice;
     result['G1SARF'] = item.quantity;
     result['G1KUR'] = getRate(item.currencyId);
-    console.log(`✅ Garni 1: G1PRC=${item.purchasePrice}, G1SARF=${item.quantity}, G1KUR=${result['G1KUR']}`);
+    result['G1EKM'] = item.numericField8 || 0;  // Ek maliyet (same currency as G1PRC)
+    console.log(`✅ Garni 1: G1PRC=${item.purchasePrice}, G1SARF=${item.quantity}, G1KUR=${result['G1KUR']}, G1EKM=${result['G1EKM']}`);
   }
 
   // Process Garni 2 (single item)
@@ -366,17 +373,23 @@ function processBomLines(bomLines, currencyRates = {}) {
     result['G2PRC'] = item.purchasePrice;
     result['G2SARF'] = item.quantity;
     result['G2KUR'] = getRate(item.currencyId);
-    console.log(`✅ Garni 2: G2PRC=${item.purchasePrice}, G2SARF=${item.quantity}, G2KUR=${result['G2KUR']}`);
+    result['G2EKM'] = item.numericField8 || 0;  // Ek maliyet (same currency as G2PRC)
+    console.log(`✅ Garni 2: G2PRC=${item.purchasePrice}, G2SARF=${item.quantity}, G2KUR=${result['G2KUR']}, G2EKM=${result['G2EKM']}`);
   }
 
-  // Process Garni 3 (weighted average)
+  // Process Garni 3 (weighted average, normalized to Currency 3)
   if (garni3Items.length > 0) {
     const normalized = normalizeItemsToCurrency(garni3Items, 3, getRate);
     const weighted = calculateWeightedAverage(normalized);
     result['G3PRC'] = weighted.averagePrice;
     result['G3SARF'] = weighted.totalQuantity;
     result['G3KUR'] = getRate(3);
-    console.log(`✅ Garni 3: G3PRC=${weighted.averagePrice.toFixed(2)}, G3SARF=${weighted.totalQuantity.toFixed(2)}, G3KUR=${result['G3KUR']}`);
+    // G3EKM: sum of all numericField8 values normalized to Currency 3
+    result['G3EKM'] = garni3Items.reduce((sum, item) => {
+      const normalizedEkm = (item.numericField8 || 0) * getRate(item.currencyId) / getRate(3);
+      return sum + normalizedEkm;
+    }, 0);
+    console.log(`✅ Garni 3: G3PRC=${weighted.averagePrice.toFixed(2)}, G3SARF=${weighted.totalQuantity.toFixed(2)}, G3KUR=${result['G3KUR']}, G3EKM=${result['G3EKM'].toFixed(2)}`);
   }
 
   // Process Nakış (price * quantity total, normalized to Currency 3)
@@ -394,17 +407,23 @@ function processBomLines(bomLines, currencyRates = {}) {
     const total = normalized.reduce((sum, item) => sum + (item.purchasePrice * item.quantity), 0);
     result['KEPRC'] = total;
     result['KEKUR'] = getRate(3);
-    console.log(`✅ Kemer: KEPRC=${total.toFixed(2)}, KEKUR=${result['KEKUR']}`);
+    // KEEKM: sum of all numericField8 values normalized to Currency 3
+    result['KEEKM'] = kemerItems.reduce((sum, item) => {
+      const normalizedEkm = (item.numericField8 || 0) * getRate(item.currencyId) / getRate(3);
+      return sum + normalizedEkm;
+    }, 0);
+    console.log(`✅ Kemer: KEPRC=${total.toFixed(2)}, KEKUR=${result['KEKUR']}, KEEKM=${result['KEEKM'].toFixed(2)}`);
   }
 
   // Process Diğer Trims (convert everything to TRY - Currency 4)
+  // Final cost per item = (quantity * purchasePrice + numericField8) * rate
   if (digerItems.length > 0) {
     let totalTRY = 0;
     for (const item of digerItems) {
       const rate = getRate(item.currencyId);
-      const tryValue = item.purchasePrice * item.quantity * rate;
+      const tryValue = (item.purchasePrice * item.quantity + (item.numericField8 || 0)) * rate;
       totalTRY += tryValue;
-      console.log(`   💰 ${item.code}: ${item.purchasePrice} × ${item.quantity} × ${rate} = ${tryValue.toFixed(2)} TRY`);
+      console.log(`   💰 ${item.code}: (${item.purchasePrice} × ${item.quantity} + ${item.numericField8 || 0}) × ${rate} = ${tryValue.toFixed(2)} TRY`);
     }
     result['ATRM'] = totalTRY;
     console.log(`✅ Diğer Trims: ATRM=${totalTRY.toFixed(2)} TRY`);
